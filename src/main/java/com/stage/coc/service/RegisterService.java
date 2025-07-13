@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class RegisterService {
+public class RegistrationService {
 
     private final UserRepository userRepository;
     private final ImportateurRepository importateurRepository;
@@ -21,13 +21,13 @@ public class RegisterService {
     private final BureauControleRepository bureauControleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public User register(RegisterRequest request) {
+    public User registerUser(RegisterRequest request) {
         // Vérifier si l'email existe déjà
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new ValidationException("Cet email est déjà utilisé");
         }
 
-        // Créer l'utilisateur de base
+        // Créer l'utilisateur
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -36,22 +36,21 @@ public class RegisterService {
         user.setTypeUser(request.getTypeUser());
         user = userRepository.save(user);
 
-        // Créer le profil spécifique selon le type
+        // Créer les entités spécifiques selon le type d'utilisateur
         switch (request.getTypeUser()) {
             case IMPORTATEUR:
-                createImportateurProfile(user, request);
+                createImportateur(user, request);
                 break;
             case AGENT:
-                createAgentProfile(user, request);
+                createAgent(user, request);
                 break;
-            default:
-                throw new ValidationException("Type d'utilisateur non supporté pour l'inscription");
+            // EXPORTATEUR n'a pas d'entité spécifique, il peut juste se connecter
         }
 
         return user;
     }
 
-    private void createImportateurProfile(User user, RegisterRequest request) {
+    private void createImportateur(User user, RegisterRequest request) {
         Importateur importateur = new Importateur();
         importateur.setUser(user);
         importateur.setRaisonSociale(request.getRaisonSociale());
@@ -61,7 +60,7 @@ public class RegisterService {
         importateurRepository.save(importateur);
     }
 
-    private void createAgentProfile(User user, RegisterRequest request) {
+    private void createAgent(User user, RegisterRequest request) {
         BureauControle bureau = bureauControleRepository.findById(request.getBureauControleId())
                 .orElseThrow(() -> new ValidationException("Bureau de contrôle non trouvé"));
 

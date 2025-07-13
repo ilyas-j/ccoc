@@ -50,9 +50,6 @@ public class User implements UserDetails {
     private Importateur importateur;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Exportateur exportateur;
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Agent agent;
 
     @PrePersist

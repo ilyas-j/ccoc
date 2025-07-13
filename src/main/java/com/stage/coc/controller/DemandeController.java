@@ -20,14 +20,14 @@ public class DemandeController {
     private final DemandeService demandeService;
 
     @PostMapping
-    @PreAuthorize("hasRole('IMPORTATEUR')")
+    @PreAuthorize("hasRole('IMPORTATEUR') or hasRole('EXPORTATEUR')")
     public ResponseEntity<DemandeResponse> creerDemande(@Valid @RequestBody DemandeRequest request) {
         DemandeResponse response = demandeService.creerDemande(request);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/mes-demandes")
-    @PreAuthorize("hasRole('IMPORTATEUR')")
+    @PreAuthorize("hasRole('IMPORTATEUR') or hasRole('EXPORTATEUR')")
     public ResponseEntity<List<DemandeResponse>> getMesDemandes() {
         List<DemandeResponse> demandes = demandeService.getMesDemandesImportateur();
         return ResponseEntity.ok(demandes);

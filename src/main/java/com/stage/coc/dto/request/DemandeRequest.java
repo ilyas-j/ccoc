@@ -10,8 +10,7 @@ import java.util.List;
 
 @Data
 public class DemandeRequest {
-    // Informations importateur
-    @NotBlank(message = "Nom/Raison sociale importateur est obligatoire")
+    // Informations importateur (utilisées quand c'est l'exportateur qui fait la demande)
     private String importateurNom;
     private String importateurTelephone;
     @Email(message = "Email importateur invalide")
@@ -20,14 +19,12 @@ public class DemandeRequest {
     private String importateurCodeDouane;
     private String importateurIce;
 
-    // Informations exportateur
-    @NotBlank(message = "Nom/Raison sociale exportateur est obligatoire")
+    // Informations exportateur (utilisées quand c'est l'importateur qui fait la demande)
     private String exportateurNom;
     private String exportateurTelephone;
     @Email(message = "Email exportateur invalide")
     private String exportateurEmail;
     private String exportateurAdresse;
-    @NotBlank(message = "Pays exportateur est obligatoire")
     private String exportateurPays;
     private String exportateurIfu;
 
