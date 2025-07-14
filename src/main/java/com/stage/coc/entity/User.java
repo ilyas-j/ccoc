@@ -1,6 +1,6 @@
 package com.stage.coc.entity;
 
-import com.stage.coc.enums.TypeUser;
+import com.stage.coc.enums.TypeUser; // Correction de l'import
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface ImportateurRepository extends JpaRepository<Importateur, Long> {
     Optional<Importateur> findByUserId(Long userId);
     Optional<Importateur> findByIce(String ice);
+
+    Optional<Importateur> findByRaisonSocialeAndIce(String importateurNom, String importateurIce);
 }

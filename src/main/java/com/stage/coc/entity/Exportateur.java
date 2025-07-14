@@ -30,6 +30,10 @@ public class Exportateur {
 
     private String ifu;
 
+    @OneToOne
+    @JoinColumn(name = "user_id") // ✅ AJOUTER CETTE RELATION
+    private User user;
+
     @OneToMany(mappedBy = "exportateur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Demande> demandes;
 }

@@ -20,9 +20,7 @@ public class ExportateurService {
     private final PasswordEncoder passwordEncoder;
 
     public User creerExportateur(String email, String password, String nom, String telephone,
-                                 String raisonSociale, String pays, String adresse, String ville,
-                                 String codePostal, String ifu, String numeroExportateur,
-                                 String secteurActivite, String numeroRegistre) {
+                                 String raisonSociale, String adresse, String pays, String ifu) {
 
         // Créer l'utilisateur
         User user = new User();
@@ -30,28 +28,18 @@ public class ExportateurService {
         user.setPassword(passwordEncoder.encode(password));
         user.setNom(nom);
         user.setTelephone(telephone);
-        user.setTypeUser(TypeUser.EXPORTATEUR);
+        user.setTypeUser(TypeUser.EXPORTATEUR); // ✅ UTILISER LE NOUVEAU TYPE
         user = userRepository.save(user);
 
-        // Créer le profil exportateur
+        // Créer l'exportateur
         Exportateur exportateur = new Exportateur();
         exportateur.setUser(user);
         exportateur.setRaisonSociale(raisonSociale);
-        exportateur.setPays(pays);
         exportateur.setAdresse(adresse);
-        exportateur.setVille(ville);
-        exportateur.setCodePostal(codePostal);
+        exportateur.setPays(pays);
         exportateur.setIfu(ifu);
-        exportateur.setNumeroExportateur(numeroExportateur);
-        exportateur.setSecteurActivite(secteurActivite);
-        exportateur.setNumeroRegistre(numeroRegistre);
         exportateurRepository.save(exportateur);
 
         return user;
-    }
-
-    public Exportateur getExportateur(Long userId) {
-        return exportateurRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Profil exportateur non trouvé"));
     }
 }

@@ -31,6 +31,9 @@ public class DemandeService {
     private final UserRepository userRepository;
     private final AffectationService affectationService;
 
+    /**
+     * Créer une nouvelle demande - Compatible Importateur ET Exportateur
+     */
     public DemandeResponse creerDemande(DemandeRequest request) {
         UserPrincipal currentUser = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findById(currentUser.getId())
@@ -39,58 +42,19 @@ public class DemandeService {
         Importateur importateur;
         Exportateur exportateur;
 
+        // Gestion selon le type d'utilisateur connecté
         if (user.getTypeUser() == TypeUser.IMPORTATEUR) {
-            // L'importateur fait la demande
-            importateur = importateurRepository.findByUserId(currentUser.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Importateur non trouvé"));
+            // L'utilisateur connecté est un importateur
+            importateur = getOrCreateImportateurFromUser(user);
+            // Créer ou récupérer l'exportateur depuis les données du formulaire
+            exportateur = creerOuRecupererExportateur(request);
 
-            // Récupérer ou créer l'exportateur
-            exportateur = exportateurRepository
-                    .findByRaisonSocialeAndPays(request.getExportateurNom(), request.getExportateurPays())
-                    .orElseGet(() -> {
-                        Exportateur newExportateur = new Exportateur();
-                        newExportateur.setRaisonSociale(request.getExportateurNom());
-                        newExportateur.setTelephone(request.getExportateurTelephone());
-                        newExportateur.setEmail(request.getExportateurEmail());
-                        newExportateur.setAdresse(request.getExportateurAdresse());
-                        newExportateur.setPays(request.getExportateurPays());
-                        newExportateur.setIfu(request.getExportateurIfu());
-                        return exportateurRepository.save(newExportateur);
-                    });
         } else if (user.getTypeUser() == TypeUser.EXPORTATEUR) {
-            // L'exportateur fait la demande
-            // Récupérer ou créer l'importateur
-            importateur = importateurRepository.findByIce(request.getImportateurIce())
-                    .orElseGet(() -> {
-                        // Créer un nouveau user pour l'importateur s'il n'existe pas
-                        User newImportateurUser = new User();
-                        newImportateurUser.setEmail(request.getImportateurEmail());
-                        newImportateurUser.setNom(request.getImportateurNom());
-                        newImportateurUser.setTelephone(request.getImportateurTelephone());
-                        newImportateurUser.setTypeUser(TypeUser.IMPORTATEUR);
-                        newImportateurUser.setPassword(""); // Pas de mot de passe, créé par exportateur
-                        newImportateurUser.setEnabled(false); // Compte non activé
-                        newImportateurUser = userRepository.save(newImportateurUser);
+            // L'utilisateur connecté est un exportateur
+            exportateur = getOrCreateExportateurFromUser(user);
+            // Créer ou récupérer l'importateur depuis les données du formulaire
+            importateur = creerOuRecupererImportateur(request);
 
-                        Importateur newImportateur = new Importateur();
-                        newImportateur.setUser(newImportateurUser);
-                        newImportateur.setRaisonSociale(request.getImportateurNom());
-                        newImportateur.setAdresse(request.getImportateurAdresse());
-                        newImportateur.setCodeDouane(request.getImportateurCodeDouane());
-                        newImportateur.setIce(request.getImportateurIce());
-                        return importateurRepository.save(newImportateur);
-                    });
-
-            // L'exportateur est l'utilisateur actuel
-            exportateur = exportateurRepository.findByRaisonSocialeAndPays(user.getNom(), "France") // Adapter selon les données
-                    .orElseGet(() -> {
-                        Exportateur newExportateur = new Exportateur();
-                        newExportateur.setRaisonSociale(user.getNom());
-                        newExportateur.setEmail(user.getEmail());
-                        newExportateur.setTelephone(user.getTelephone());
-                        // Autres informations à récupérer du profil utilisateur
-                        return exportateurRepository.save(newExportateur);
-                    });
         } else {
             throw new RuntimeException("Seuls les importateurs et exportateurs peuvent créer des demandes");
         }
@@ -101,7 +65,7 @@ public class DemandeService {
         demande.setExportateur(exportateur);
         demande.setStatus(StatusDemande.DEPOSE);
 
-        // Sauvegarder la demande d'abord
+        // Sauvegarder la demande d'abord pour avoir un ID
         demande = demandeRepository.save(demande);
 
         // Ajouter les marchandises
@@ -125,7 +89,10 @@ public class DemandeService {
         return convertToResponse(demande);
     }
 
-    public List<DemandeResponse> getMesDemandesImportateur() {
+    /**
+     * Récupérer les demandes de l'utilisateur connecté (Importateur OU Exportateur)
+     */
+    public List<DemandeResponse> getMesDemandesUtilisateur() {
         UserPrincipal currentUser = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findById(currentUser.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
@@ -133,22 +100,27 @@ public class DemandeService {
         List<Demande> demandes;
 
         if (user.getTypeUser() == TypeUser.IMPORTATEUR) {
+            // Récupérer les demandes où l'utilisateur est l'importateur
             Importateur importateur = importateurRepository.findByUserId(currentUser.getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Importateur non trouvé"));
             demandes = demandeRepository.findByImportateurId(importateur.getId());
+
         } else if (user.getTypeUser() == TypeUser.EXPORTATEUR) {
-            // Pour un exportateur, trouver les demandes où il est l'exportateur
-            // Pour un exportateur, trouver les demandes où il est l'exportateur
-            Exportateur exportateur = exportateurRepository.findByEmail(user.getEmail())
+            // Récupérer les demandes où l'utilisateur est l'exportateur
+            Exportateur exportateur = exportateurRepository.findByUserId(currentUser.getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Exportateur non trouvé"));
             demandes = demandeRepository.findByExportateurId(exportateur.getId());
+
         } else {
-            throw new RuntimeException("Seuls les importateurs et exportateurs peuvent consulter leurs demandes");
+            throw new RuntimeException("Accès non autorisé pour ce type d'utilisateur");
         }
 
         return demandes.stream().map(this::convertToResponse).collect(Collectors.toList());
     }
 
+    /**
+     * Récupérer les demandes affectées à l'agent connecté
+     */
     public List<DemandeResponse> getDemandesAgent() {
         UserPrincipal currentUser = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -164,6 +136,9 @@ public class DemandeService {
         return demandes.stream().map(this::convertToResponse).collect(Collectors.toList());
     }
 
+    /**
+     * Prendre en charge une demande (pour les agents)
+     */
     public DemandeResponse prendreEnCharge(Long demandeId) {
         UserPrincipal currentUser = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -185,6 +160,53 @@ public class DemandeService {
         return convertToResponse(demande);
     }
 
+    /**
+     * Méthodes utilitaires privées
+     */
+
+    private Importateur getOrCreateImportateurFromUser(User user) {
+        return importateurRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Profil importateur non trouvé pour cet utilisateur"));
+    }
+
+    private Exportateur getOrCreateExportateurFromUser(User user) {
+        return exportateurRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Profil exportateur non trouvé pour cet utilisateur"));
+    }
+
+    private Exportateur creerOuRecupererExportateur(DemandeRequest request) {
+        return exportateurRepository
+                .findByRaisonSocialeAndPays(request.getExportateurNom(), request.getExportateurPays())
+                .orElseGet(() -> {
+                    Exportateur newExportateur = new Exportateur();
+                    newExportateur.setRaisonSociale(request.getExportateurNom());
+                    newExportateur.setTelephone(request.getExportateurTelephone());
+                    newExportateur.setEmail(request.getExportateurEmail());
+                    newExportateur.setAdresse(request.getExportateurAdresse());
+                    newExportateur.setPays(request.getExportateurPays());
+                    newExportateur.setIfu(request.getExportateurIfu());
+                    // Note: On ne crée pas d'utilisateur associé pour un exportateur "externe"
+                    return exportateurRepository.save(newExportateur);
+                });
+    }
+
+    private Importateur creerOuRecupererImportateur(DemandeRequest request) {
+        return importateurRepository
+                .findByRaisonSocialeAndIce(request.getImportateurNom(), request.getImportateurIce())
+                .orElseGet(() -> {
+                    Importateur newImportateur = new Importateur();
+                    newImportateur.setRaisonSociale(request.getImportateurNom());
+                    newImportateur.setAdresse(request.getImportateurAdresse());
+                    newImportateur.setCodeDouane(request.getImportateurCodeDouane());
+                    newImportateur.setIce(request.getImportateurIce());
+                    // Note: On ne crée pas d'utilisateur associé pour un importateur "externe"
+                    return importateurRepository.save(newImportateur);
+                });
+    }
+
+    /**
+     * Convertir une entité Demande en DTO Response
+     */
     private DemandeResponse convertToResponse(Demande demande) {
         DemandeResponse response = new DemandeResponse();
         response.setId(demande.getId());
@@ -222,6 +244,9 @@ public class DemandeService {
         return response;
     }
 
+    /**
+     * Convertir une entité Marchandise en DTO Response
+     */
     private MarchandiseResponse convertMarchandiseToResponse(Marchandise marchandise) {
         MarchandiseResponse response = new MarchandiseResponse();
         response.setId(marchandise.getId());

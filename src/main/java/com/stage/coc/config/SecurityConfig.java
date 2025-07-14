@@ -52,9 +52,25 @@ public class SecurityConfig {
                 .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeHttpRequests(authz -> authz
+                        // Routes publiques
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
+
+                        // Routes importateur
+                        .requestMatchers("/api/demandes", "/api/demandes/mes-demandes").hasRole("IMPORTATEUR")
+                        .requestMatchers("/api/importateurs/**").hasRole("IMPORTATEUR")
+
+                        // Routes agent (includes superviseur)
+                        .requestMatchers("/api/agent/**").hasRole("AGENT")
+                        .requestMatchers("/api/demandes/agent").hasRole("AGENT")
+                        .requestMatchers("/api/demandes/*/prendre-en-charge").hasRole("AGENT")
+
+                        // Routes superviseur (les superviseurs sont aussi des agents)
+                        .requestMatchers("/api/superviseur/**").hasRole("AGENT")
+
+                        // Toute autre route nécessite une authentification
                         .anyRequest().authenticated()
                 );
 

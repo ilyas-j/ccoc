@@ -29,7 +29,7 @@ public class DemandeController {
     @GetMapping("/mes-demandes")
     @PreAuthorize("hasRole('IMPORTATEUR') or hasRole('EXPORTATEUR')")
     public ResponseEntity<List<DemandeResponse>> getMesDemandes() {
-        List<DemandeResponse> demandes = demandeService.getMesDemandesImportateur();
+        List<DemandeResponse> demandes = demandeService.getMesDemandesUtilisateur();
         return ResponseEntity.ok(demandes);
     }
 
