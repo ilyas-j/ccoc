@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -207,7 +208,7 @@ public class DemandeService {
     /**
      * Convertir une entité Demande en DTO Response
      */
-    private DemandeResponse convertToResponse(Demande demande) {
+    public DemandeResponse convertToResponse(Demande demande) {
         DemandeResponse response = new DemandeResponse();
         response.setId(demande.getId());
         response.setNumeroDemande(demande.getNumeroDemande());
@@ -232,6 +233,8 @@ public class DemandeService {
         if (demande.getAgent() != null && demande.getAgent().getUser() != null) {
             response.setAgentNom(demande.getAgent().getUser().getNom());
         }
+        response.setDelaiEstime(calculerDelaiEstime(demande));
+        response.setDateAffectation(demande.getDateCreation());
 
         // Convertir les marchandises
         if (demande.getMarchandises() != null) {
@@ -241,13 +244,11 @@ public class DemandeService {
             response.setMarchandises(marchandises);
         }
 
+
         return response;
     }
 
-    /**
-     * Convertir une entité Marchandise en DTO Response
-     */
-    private MarchandiseResponse convertMarchandiseToResponse(Marchandise marchandise) {
+    private Object convertMarchandiseToResponse(Marchandise marchandise) {
         MarchandiseResponse response = new MarchandiseResponse();
         response.setId(marchandise.getId());
         response.setCategorie(marchandise.getCategorie());
@@ -264,6 +265,46 @@ public class DemandeService {
             response.setCommentaire(marchandise.getAvisMarchandise().getCommentaire());
         }
 
+
         return response;
+    }
+
+    private String calculerDelaiEstime(Demande demande) {
+        if (demande.getMarchandises() != null) {
+            int nombreMarchandises = demande.getMarchandises().size();
+            int delai = Math.max(1, nombreMarchandises / 2 + 1);
+            return delai + " jour(s)";
+        }
+        return "2 jour(s)";
+    }
+}
+
+/**
+ * Convertir une entité Marchandise en DTO Response
+ */
+
+public List<DemandeResponse> getMesDemandesUtilisateur() {
+    UserPrincipal currentUser = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+    User user = userRepository.findById(currentUser.getId())
+            .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
+
+    List<Demande> demandes = new ArrayList<>();
+
+    switch (user.getTypeUser()) {
+        case IMPORTATEUR:
+            Importateur importateur = importateurRepository.findByUserId(currentUser.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Importateur non trouvé"));
+            demandes = demandeRepository.findByImportateurId(importateur.getId());
+            break;
+
+        case EXPORTATEUR:
+            // Pour les exportateurs, il faut d'abord créer la logique
+            // En attendant, retourner une liste vide ou implémenter selon vos besoins
+            demandes = demandeRepository.findByExportateurUserId(currentUser.getId());
+            break;
+
+        default:
+            throw new RuntimeException("Type d'utilisateur non autorisé pour cette action");
     }
 }
