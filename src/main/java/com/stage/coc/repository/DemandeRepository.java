@@ -24,5 +24,7 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
 
     // Alternative si les exportateurs ont un userId (à adapter selon votre modèle)
     @Query("SELECT d FROM Demande d WHERE d.exportateur.id = :exportateurId")
-    List<Demande> findByExportateurId(@Param("exportateurId") Long exportateurId);
+    default List<Demande> findByExportateurId(@Param("exportateurId") Long exportateurId) {
+        return null;
+    }
 }

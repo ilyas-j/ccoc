@@ -9,7 +9,6 @@ import java.util.List;
 @Data
 public class DemandeResponse {
     private Long id;
-    private String delaiEstime; // AJOUTER
     private LocalDateTime dateAffectation; // AJOUTER
     private String numeroDemande;
     private StatusDemande status;
@@ -23,5 +22,4 @@ public class DemandeResponse {
     private String agentNom;
     private List<MarchandiseResponse> marchandises;
     private String delaiEstime;
-    private LocalDateTime dateAffectation;
 }

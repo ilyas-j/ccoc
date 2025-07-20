@@ -277,34 +277,35 @@ public class DemandeService {
         }
         return "2 jour(s)";
     }
-}
 
-/**
- * Convertir une entité Marchandise en DTO Response
- */
+    /**
+     * Convertir une entité Marchandise en DTO Response
+     */
 
-public List<DemandeResponse> getMesDemandesUtilisateur() {
-    UserPrincipal currentUser = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public List<DemandeResponse> getMesDemandesUtilisateur() {
+        UserPrincipal currentUser = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-    User user = userRepository.findById(currentUser.getId())
-            .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
+        User user = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
 
-    List<Demande> demandes = new ArrayList<>();
+        List<Demande> demandes = new ArrayList<>();
 
-    switch (user.getTypeUser()) {
-        case IMPORTATEUR:
-            Importateur importateur = importateurRepository.findByUserId(currentUser.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Importateur non trouvé"));
-            demandes = demandeRepository.findByImportateurId(importateur.getId());
-            break;
+        switch (user.getTypeUser()) {
+            case IMPORTATEUR:
+                Importateur importateur = importateurRepository.findByUserId(currentUser.getId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Importateur non trouvé"));
+                demandes = demandeRepository.findByImportateurId(importateur.getId());
+                break;
 
-        case EXPORTATEUR:
-            // Pour les exportateurs, il faut d'abord créer la logique
-            // En attendant, retourner une liste vide ou implémenter selon vos besoins
-            demandes = demandeRepository.findByExportateurUserId(currentUser.getId());
-            break;
+            case EXPORTATEUR:
+                // Pour les exportateurs, il faut d'abord créer la logique
+                // En attendant, retourner une liste vide ou implémenter selon vos besoins
+                demandes = demandeRepository.findByExportateurUserId(currentUser.getId());
+                break;
 
-        default:
-            throw new RuntimeException("Type d'utilisateur non autorisé pour cette action");
+            default:
+                throw new RuntimeException("Type d'utilisateur non autorisé pour cette action");
+        }
     }
 }
+
