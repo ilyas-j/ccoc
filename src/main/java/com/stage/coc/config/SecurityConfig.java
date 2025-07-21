@@ -52,7 +52,6 @@ public class SecurityConfig {
                 .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeHttpRequests(authz -> authz
-<<<<<<< HEAD
                         // Routes publiques
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
@@ -72,11 +71,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/superviseur/**").hasRole("AGENT")
 
                         // Toute autre route nécessite une authentification
-=======
+
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
->>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
+
                         .anyRequest().authenticated()
                 );
 
@@ -85,8 +84,4 @@ public class SecurityConfig {
 
         return http.build();
     }
-<<<<<<< HEAD
-}
-=======
-}
->>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
+
