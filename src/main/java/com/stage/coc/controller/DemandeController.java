@@ -2,6 +2,7 @@ package com.stage.coc.controller;
 
 import com.stage.coc.dto.request.DemandeRequest;
 import com.stage.coc.dto.response.DemandeResponse;
+<<<<<<< HEAD
 import com.stage.coc.entity.Agent;
 import com.stage.coc.entity.Demande;
 import com.stage.coc.entity.Marchandise;
@@ -12,17 +13,25 @@ import com.stage.coc.repository.DemandeRepository;
 import com.stage.coc.repository.MarchandiseRepository;
 import com.stage.coc.repository.UserRepository;
 import com.stage.coc.security.UserPrincipal; // CORRECTION 1: Import correct
+=======
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
 import com.stage.coc.service.DemandeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+<<<<<<< HEAD
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+=======
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
 
 @RestController
 @RequestMapping("/api/demandes")
@@ -31,22 +40,34 @@ import java.util.Map;
 public class DemandeController {
 
     private final DemandeService demandeService;
+<<<<<<< HEAD
     private final DemandeRepository demandeRepository;
     private final UserRepository userRepository;
     private final MarchandiseRepository marchandiseRepository;
 
     @PostMapping
     @PreAuthorize("hasRole('IMPORTATEUR') or hasRole('EXPORTATEUR')")
+=======
+
+    @PostMapping
+    @PreAuthorize("hasRole('IMPORTATEUR')")
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
     public ResponseEntity<DemandeResponse> creerDemande(@Valid @RequestBody DemandeRequest request) {
         DemandeResponse response = demandeService.creerDemande(request);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/mes-demandes")
+<<<<<<< HEAD
     @PreAuthorize("hasRole('IMPORTATEUR') or hasRole('EXPORTATEUR')")
     public ResponseEntity<List<DemandeResponse>> getMesDemandes() {
         // CORRECTION 2: Méthode corrigée pour gérer importateurs et exportateurs
         List<DemandeResponse> demandes = demandeService.getMesDemandesUtilisateur();
+=======
+    @PreAuthorize("hasRole('IMPORTATEUR')")
+    public ResponseEntity<List<DemandeResponse>> getMesDemandes() {
+        List<DemandeResponse> demandes = demandeService.getMesDemandesImportateur();
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
         return ResponseEntity.ok(demandes);
     }
 
@@ -63,6 +84,7 @@ public class DemandeController {
         DemandeResponse response = demandeService.prendreEnCharge(id);
         return ResponseEntity.ok(response);
     }
+<<<<<<< HEAD
 
     // CORRECTION 3: Ajouter l'annotation @PutMapping et @PreAuthorize manquantes
     @PutMapping("/{id}/finaliser")
@@ -126,3 +148,6 @@ public class DemandeController {
         }
     }
 }
+=======
+}
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8

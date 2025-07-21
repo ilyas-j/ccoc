@@ -1,7 +1,10 @@
 package com.stage.coc.controller;
 
 import com.stage.coc.dto.request.AvisMarchandiseRequest;
+<<<<<<< HEAD
 import com.stage.coc.dto.response.DemandeResponse;
+=======
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
 import com.stage.coc.service.AgentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -9,8 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+<<<<<<< HEAD
 import java.util.List;
 
+=======
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
 @RestController
 @RequestMapping("/api/agent")
 @RequiredArgsConstructor
@@ -19,6 +25,7 @@ public class AgentController {
 
     private final AgentService agentService;
 
+<<<<<<< HEAD
     /**
      * Récupérer les demandes affectées à l'agent connecté
      */
@@ -42,12 +49,15 @@ public class AgentController {
     /**
      * Donner un avis sur une marchandise
      */
+=======
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
     @PostMapping("/avis-marchandise")
     @PreAuthorize("hasRole('AGENT')")
     public ResponseEntity<Void> donnerAvisMarchandise(@Valid @RequestBody AvisMarchandiseRequest request) {
         agentService.donnerAvisMarchandise(request);
         return ResponseEntity.ok().build();
     }
+<<<<<<< HEAD
 
     /**
      * Finaliser un dossier (calculer décision globale et clôturer)
@@ -59,3 +69,7 @@ public class AgentController {
         return ResponseEntity.ok(response);
     }
 }
+=======
+}
+
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
