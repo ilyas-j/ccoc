@@ -1,15 +1,12 @@
 package com.stage.coc.security;
 
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
+import javax.crypto.SecretKey;
 import java.util.Date;
 
 @Component
@@ -21,42 +18,51 @@ public class JwtTokenProvider {
     @Value("${app.jwtExpirationInMs:604800000}")
     private int jwtExpirationInMs;
 
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    }
+
     public String generateToken(Authentication authentication) {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
-        long now = System.currentTimeMillis();
-        Date expiryDate = new Date(now + jwtExpirationInMs);
+        Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationInMs);
 
-        // Créer un simple token avec userId et expiration
-        String payload = userPrincipal.getId() + ":" + expiryDate.getTime();
-        return Base64.getEncoder().encodeToString(payload.getBytes(StandardCharsets.UTF_8));
+        return Jwts.builder()
+                .setSubject(Long.toString(userPrincipal.getId()))
+                .setIssuedAt(new Date())
+                .setExpiration(expiryDate)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .compact();
     }
 
     public Long getUserIdFromJWT(String token) {
-        try {
-            String decoded = new String(Base64.getDecoder().decode(token), StandardCharsets.UTF_8);
-            String[] parts = decoded.split(":");
-            return Long.parseLong(parts[0]);
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid token", e);
-        }
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return Long.parseLong(claims.getSubject());
     }
 
     public boolean validateToken(String authToken) {
         try {
-            String decoded = new String(Base64.getDecoder().decode(authToken), StandardCharsets.UTF_8);
-            String[] parts = decoded.split(":");
-
-            if (parts.length != 2) {
-                return false;
-            }
-
-            long expirationTime = Long.parseLong(parts[1]);
-            return System.currentTimeMillis() < expirationTime;
-
-        } catch (Exception ex) {
-            System.err.println("Invalid JWT token: " + ex.getMessage());
-            return false;
+            Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(authToken);
+            return true;
+        } catch (SecurityException ex) {
+            System.err.println("Invalid JWT signature");
+        } catch (MalformedJwtException ex) {
+            System.err.println("Invalid JWT token");
+        } catch (ExpiredJwtException ex) {
+            System.err.println("Expired JWT token");
+        } catch (UnsupportedJwtException ex) {
+            System.err.println("Unsupported JWT token");
+        } catch (IllegalArgumentException ex) {
+            System.err.println("JWT claims string is empty");
         }
+        return false;
     }
 }

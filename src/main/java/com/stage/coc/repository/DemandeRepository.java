@@ -12,7 +12,6 @@ import java.util.List;
 @Repository
 public interface DemandeRepository extends JpaRepository<Demande, Long> {
     List<Demande> findByImportateurId(Long importateurId);
-    List<Demande> findByExportateurId(Long exportateurId); // ✅ AJOUTER CETTE MÉTHODE
     List<Demande> findByAgentId(Long agentId);
     List<Demande> findByBureauControleId(Long bureauControleId);
     List<Demande> findByStatus(StatusDemande status);
@@ -27,4 +26,6 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
     default List<Demande> findByExportateurId(@Param("exportateurId") Long exportateurId) {
         return null;
     }
+
+    List<Demande> findByExportateurUserId(Long exportateurUserId);
 }
