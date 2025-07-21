@@ -1,6 +1,6 @@
 package com.stage.coc.entity;
 
-import com.portnet.coc.enums.TypeUser;
+import com.stage.coc.enums.TypeUser;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;

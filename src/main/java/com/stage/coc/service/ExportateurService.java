@@ -42,4 +42,15 @@ public class ExportateurService {
 
         return user;
     }
+
+    public Exportateur getOrCreateExportateur(String email, String raisonSociale, String pays) {
+        // Chercher d'abord par user email s'il existe
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user != null && user.getTypeUser() == TypeUser.EXPORTATEUR) {
+            return exportateurRepository.findByUserId(user.getId()).orElse(null);
+        }
+
+        // Sinon chercher par raison sociale et pays
+        return exportateurRepository.findByRaisonSocialeAndPays(raisonSociale, pays).orElse(null);
+    }
 }

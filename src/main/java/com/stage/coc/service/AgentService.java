@@ -1,18 +1,12 @@
 package com.stage.coc.service;
 
 import com.stage.coc.dto.request.AvisMarchandiseRequest;
-<<<<<<< HEAD
 import com.stage.coc.dto.response.DemandeResponse;
 import com.stage.coc.dto.response.MarchandiseResponse;
 import com.stage.coc.entity.*;
 import com.stage.coc.enums.StatusDemande;
 import com.stage.coc.exception.ResourceNotFoundException;
 import com.stage.coc.exception.UnauthorizedException;
-=======
-import com.stage.coc.entity.*;
-import com.stage.coc.enums.StatusDemande;
-import com.stage.coc.exception.ResourceNotFoundException;
->>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
 import com.stage.coc.repository.*;
 import com.stage.coc.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-<<<<<<< HEAD
 import java.util.stream.Collectors;
-=======
->>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +27,6 @@ public class AgentService {
     private final AvisMarchandiseRepository avisMarchandiseRepository;
     private final DemandeRepository demandeRepository;
     private final UserRepository userRepository;
-<<<<<<< HEAD
     private final AgentRepository agentRepository;
 
     /**
@@ -82,18 +72,21 @@ public class AgentService {
      * Donner un avis sur une marchandise
      */
     public void donnerAvisMarchandise(AvisMarchandiseRequest request) {
-        Agent agent = getAgentConnecte();
-=======
+        UserPrincipal currentUser = (UserPrincipal) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
 
-    public void donnerAvisMarchandise(AvisMarchandiseRequest request) {
-        UserPrincipal currentUser = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
->>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
+        User user = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
+
+        Agent agent = user.getAgent();
+        if (agent == null) {
+            throw new RuntimeException("Agent non trouvé pour cet utilisateur");
+        }
 
         Marchandise marchandise = marchandiseRepository.findById(request.getMarchandiseId())
                 .orElseThrow(() -> new ResourceNotFoundException("Marchandise non trouvée"));
 
         // Vérifier que l'agent est bien affecté à cette demande
-<<<<<<< HEAD
         if (!marchandise.getDemande().getAgent().getId().equals(agent.getId())) {
             throw new UnauthorizedException("Vous n'êtes pas autorisé à traiter cette marchandise");
         }
@@ -101,14 +94,6 @@ public class AgentService {
         // Vérifier que la demande est en cours de traitement
         if (marchandise.getDemande().getStatus() != StatusDemande.EN_COURS_DE_TRAITEMENT) {
             throw new IllegalStateException("La demande doit être en cours de traitement");
-=======
-        User user = userRepository.findById(currentUser.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
-
-        Agent agent = user.getAgent();
-        if (agent == null || !marchandise.getDemande().getAgent().getId().equals(agent.getId())) {
-            throw new RuntimeException("Vous n'êtes pas autorisé à traiter cette marchandise");
->>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
         }
 
         // Créer ou mettre à jour l'avis
@@ -121,9 +106,8 @@ public class AgentService {
 
         avisMarchandiseRepository.save(avis);
 
-<<<<<<< HEAD
         // Vérifier si toutes les marchandises ont un avis pour auto-finalisation
-        verifierCompletudeDossier(marchandise.getDemande());
+        verifierEtCloturer(marchandise.getDemande());
     }
 
     /**
@@ -160,24 +144,14 @@ public class AgentService {
     /**
      * Vérifier si toutes les marchandises ont un avis et finaliser automatiquement
      */
-    private void verifierCompletudeDossier(Demande demande) {
-        List<Marchandise> marchandises = marchandiseRepository.findByDemandeId(demande.getId());
-
-=======
-        // Vérifier si toutes les marchandises de la demande ont un avis
-        verifierEtCloturer(marchandise.getDemande());
-    }
-
     private void verifierEtCloturer(Demande demande) {
         List<Marchandise> marchandises = marchandiseRepository.findByDemandeId(demande.getId());
 
         // Vérifier si toutes les marchandises ont un avis
->>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
         boolean toutesTraitees = marchandises.stream()
                 .allMatch(m -> avisMarchandiseRepository.findByMarchandiseId(m.getId()).isPresent());
 
         if (toutesTraitees) {
-<<<<<<< HEAD
             finaliserDossier(demande);
         }
     }
@@ -204,19 +178,6 @@ public class AgentService {
     /**
      * Calculer la décision globale selon les règles du cahier des charges
      */
-=======
-            // Calculer la décision globale
-            String decisionGlobale = calculerDecisionGlobale(marchandises);
-
-            demande.setDecisionGlobale(decisionGlobale);
-            demande.setStatus(StatusDemande.CLOTURE);
-            demande.setDateCloture(LocalDateTime.now());
-
-            demandeRepository.save(demande);
-        }
-    }
-
->>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
     private String calculerDecisionGlobale(List<Marchandise> marchandises) {
         boolean hasNonConforme = false;
         boolean hasConformeAvecReserve = false;
@@ -233,20 +194,14 @@ public class AgentService {
                     case CONFORME_AVEC_RESERVE:
                         hasConformeAvecReserve = true;
                         break;
-<<<<<<< HEAD
                     case CONFORME:
                         // Continue
                         break;
-=======
->>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
                 }
             }
         }
 
-<<<<<<< HEAD
         // Règles selon le cahier des charges
-=======
->>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
         if (hasNonConforme) {
             return "NON_CONFORME";
         } else if (hasConformeAvecReserve) {
@@ -255,7 +210,6 @@ public class AgentService {
             return "CONFORME";
         }
     }
-<<<<<<< HEAD
 
     /**
      * Récupérer l'agent connecté
@@ -337,6 +291,3 @@ public class AgentService {
         return response;
     }
 }
-=======
-}
->>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8

@@ -71,11 +71,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/superviseur/**").hasRole("AGENT")
 
                         // Toute autre route nécessite une authentification
-
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/public/**").permitAll()
-                        .requestMatchers("/actuator/**").permitAll()
-
                         .anyRequest().authenticated()
                 );
 
@@ -84,4 +79,4 @@ public class SecurityConfig {
 
         return http.build();
     }
-
+}
