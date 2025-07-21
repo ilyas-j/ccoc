@@ -6,7 +6,10 @@ import com.stage.coc.dto.response.DemandeResponse;
 import com.stage.coc.dto.response.MarchandiseResponse;
 import com.stage.coc.entity.*;
 import com.stage.coc.enums.StatusDemande;
+<<<<<<< HEAD
 import com.stage.coc.enums.TypeUser;
+=======
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
 import com.stage.coc.exception.ResourceNotFoundException;
 import com.stage.coc.repository.*;
 import com.stage.coc.security.UserPrincipal;
@@ -16,7 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+<<<<<<< HEAD
 import java.util.ArrayList;
+=======
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,6 +38,7 @@ public class DemandeService {
     private final UserRepository userRepository;
     private final AffectationService affectationService;
 
+<<<<<<< HEAD
     /**
      * Créer une nouvelle demande - Compatible Importateur ET Exportateur
      */
@@ -59,6 +66,28 @@ public class DemandeService {
         } else {
             throw new RuntimeException("Seuls les importateurs et exportateurs peuvent créer des demandes");
         }
+=======
+    public DemandeResponse creerDemande(DemandeRequest request) {
+        UserPrincipal currentUser = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        // Récupérer ou créer l'importateur
+        Importateur importateur = importateurRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Importateur non trouvé"));
+
+        // Récupérer ou créer l'exportateur
+        Exportateur exportateur = exportateurRepository
+                .findByRaisonSocialeAndPays(request.getExportateurNom(), request.getExportateurPays())
+                .orElseGet(() -> {
+                    Exportateur newExportateur = new Exportateur();
+                    newExportateur.setRaisonSociale(request.getExportateurNom());
+                    newExportateur.setTelephone(request.getExportateurTelephone());
+                    newExportateur.setEmail(request.getExportateurEmail());
+                    newExportateur.setAdresse(request.getExportateurAdresse());
+                    newExportateur.setPays(request.getExportateurPays());
+                    newExportateur.setIfu(request.getExportateurIfu());
+                    return exportateurRepository.save(newExportateur);
+                });
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
 
         // Créer la demande
         Demande demande = new Demande();
@@ -66,7 +95,11 @@ public class DemandeService {
         demande.setExportateur(exportateur);
         demande.setStatus(StatusDemande.DEPOSE);
 
+<<<<<<< HEAD
         // Sauvegarder la demande d'abord pour avoir un ID
+=======
+        // Sauvegarder la demande d'abord
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
         demande = demandeRepository.save(demande);
 
         // Ajouter les marchandises
@@ -90,6 +123,7 @@ public class DemandeService {
         return convertToResponse(demande);
     }
 
+<<<<<<< HEAD
     /**
      * Récupérer les demandes de l'utilisateur connecté (Importateur OU Exportateur)
      */
@@ -98,6 +132,18 @@ public class DemandeService {
     /**
      * Récupérer les demandes affectées à l'agent connecté
      */
+=======
+    public List<DemandeResponse> getMesDemandesImportateur() {
+        UserPrincipal currentUser = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        Importateur importateur = importateurRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Importateur non trouvé"));
+
+        List<Demande> demandes = demandeRepository.findByImportateurId(importateur.getId());
+        return demandes.stream().map(this::convertToResponse).collect(Collectors.toList());
+    }
+
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
     public List<DemandeResponse> getDemandesAgent() {
         UserPrincipal currentUser = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -113,9 +159,12 @@ public class DemandeService {
         return demandes.stream().map(this::convertToResponse).collect(Collectors.toList());
     }
 
+<<<<<<< HEAD
     /**
      * Prendre en charge une demande (pour les agents)
      */
+=======
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
     public DemandeResponse prendreEnCharge(Long demandeId) {
         UserPrincipal currentUser = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -137,6 +186,7 @@ public class DemandeService {
         return convertToResponse(demande);
     }
 
+<<<<<<< HEAD
     /**
      * Méthodes utilitaires privées
      */
@@ -184,6 +234,9 @@ public class DemandeService {
      * Convertir une entité Demande en DTO Response
      */
     public DemandeResponse convertToResponse(Demande demande) {
+=======
+    private DemandeResponse convertToResponse(Demande demande) {
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
         DemandeResponse response = new DemandeResponse();
         response.setId(demande.getId());
         response.setNumeroDemande(demande.getNumeroDemande());
@@ -209,10 +262,14 @@ public class DemandeService {
             response.setAgentNom(demande.getAgent().getUser().getNom());
         }
 
+<<<<<<< HEAD
         response.setDelaiEstime(calculerDelaiEstime(demande));
         response.setDateAffectation(demande.getDateCreation());
 
         // Convertir les marchandises - CORRECTION ICI
+=======
+        // Convertir les marchandises
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
         if (demande.getMarchandises() != null) {
             List<MarchandiseResponse> marchandises = demande.getMarchandises().stream()
                     .map(this::convertMarchandiseToResponse)
@@ -223,9 +280,12 @@ public class DemandeService {
         return response;
     }
 
+<<<<<<< HEAD
     /**
      * Convertir une entité Marchandise en DTO Response - CORRECTION ICI AUSSI
      */
+=======
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
     private MarchandiseResponse convertMarchandiseToResponse(Marchandise marchandise) {
         MarchandiseResponse response = new MarchandiseResponse();
         response.setId(marchandise.getId());
@@ -245,6 +305,7 @@ public class DemandeService {
 
         return response;
     }
+<<<<<<< HEAD
 
     private String calculerDelaiEstime(Demande demande) {
         if (demande.getMarchandises() != null) {
@@ -283,3 +344,6 @@ public class DemandeService {
     }
 }
 
+=======
+}
+>>>>>>> f59e6dfdfa7c5770947b5d62e0df2f48aee08cc8
