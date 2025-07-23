@@ -20,6 +20,7 @@ public class RegistrationService {
     private final AgentRepository agentRepository;
     private final BureauControleRepository bureauControleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ExportateurRepository exportateurRepository;
 
     public User registerUser(RegisterRequest request) {
         // Vérifier si l'email existe déjà
@@ -41,13 +42,26 @@ public class RegistrationService {
             case IMPORTATEUR:
                 createImportateur(user, request);
                 break;
+            case EXPORTATEUR:
+                createExportateur(user, request); // AJOUTER
+                break;
             case AGENT:
                 createAgent(user, request);
                 break;
-            // EXPORTATEUR n'a pas d'entité spécifique, il peut juste se connecter
         }
-
         return user;
+    }
+
+    private void createExportateur(User user, RegisterRequest request) {
+        Exportateur exportateur = new Exportateur();
+        exportateur.setUser(user);
+        exportateur.setRaisonSociale(request.getRaisonSociale());
+        exportateur.setTelephone(request.getTelephone());
+        exportateur.setEmail(request.getEmail());
+        exportateur.setAdresse(request.getAdresse());
+        exportateur.setPays(request.getPays());
+        exportateur.setIfu(request.getIfu());
+        exportateurRepository.save(exportateur);
     }
 
     private void createImportateur(User user, RegisterRequest request) {

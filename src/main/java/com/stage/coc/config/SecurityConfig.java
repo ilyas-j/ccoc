@@ -61,7 +61,7 @@ public class SecurityConfig {
                         // Routes importateur
                         .requestMatchers("/api/demandes", "/api/demandes/mes-demandes").hasRole("IMPORTATEUR")
                         .requestMatchers("/api/importateurs/**").hasRole("IMPORTATEUR")
-
+                        .requestMatchers("/api/exportateur/**").hasRole("EXPORTATEUR")
                         // Routes agent (includes superviseur)
                         .requestMatchers("/api/agent/**").hasRole("AGENT")
                         .requestMatchers("/api/demandes/agent").hasRole("AGENT")

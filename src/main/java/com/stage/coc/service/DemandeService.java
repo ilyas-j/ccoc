@@ -43,19 +43,14 @@ public class DemandeService {
         Importateur importateur;
         Exportateur exportateur;
 
-        // Gestion selon le type d'utilisateur connecté
         if (user.getTypeUser() == TypeUser.IMPORTATEUR) {
             // L'utilisateur connecté est un importateur
             importateur = getOrCreateImportateurFromUser(user);
-            // Créer ou récupérer l'exportateur depuis les données du formulaire
             exportateur = creerOuRecupererExportateur(request);
-
         } else if (user.getTypeUser() == TypeUser.EXPORTATEUR) {
             // L'utilisateur connecté est un exportateur
             exportateur = getOrCreateExportateurFromUser(user);
-            // Créer ou récupérer l'importateur depuis les données du formulaire
             importateur = creerOuRecupererImportateur(request);
-
         } else {
             throw new RuntimeException("Seuls les importateurs et exportateurs peuvent créer des demandes");
         }
@@ -293,4 +288,5 @@ public class DemandeService {
         }
         return "2 jour(s)";
     }
+
 }
