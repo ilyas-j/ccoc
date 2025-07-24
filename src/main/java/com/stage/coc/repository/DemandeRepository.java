@@ -26,4 +26,7 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
     // Method for finding demands by exportateur's user ID
     @Query("SELECT d FROM Demande d WHERE d.exportateur.user.id = :userId")
     List<Demande> findByExportateurUserId(@Param("userId") Long userId);
+
+    // ✅ AJOUTER CETTE MÉTHODE pour éviter les demandes dupliquées
+    List<Demande> findByImportateurIdAndExportateurId(Long importateurId, Long exportateurId);
 }
