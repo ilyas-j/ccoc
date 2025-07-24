@@ -19,16 +19,21 @@ public class UserPrincipal implements UserDetails {
     private Collection<? extends GrantedAuthority> authorities;
 
     public static UserPrincipal create(User user) {
+        System.out.println("🛠️ UserPrincipal.create() appelé pour: " + user.getEmail() + " (ID: " + user.getId() + ")");
+
         Collection<GrantedAuthority> authorities = Collections.singletonList(
                 new SimpleGrantedAuthority("ROLE_" + user.getTypeUser().name())
         );
 
-        return new UserPrincipal(
+        UserPrincipal principal = new UserPrincipal(
                 user.getId(),
                 user.getEmail(),
                 user.getPassword(),
                 authorities
         );
+
+        System.out.println("✅ UserPrincipal créé avec succès - ID: " + principal.getId() + ", Email: " + principal.getEmail());
+        return principal;
     }
 
     @Override

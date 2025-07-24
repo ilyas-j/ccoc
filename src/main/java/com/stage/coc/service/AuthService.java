@@ -6,54 +6,50 @@ import com.stage.coc.entity.User;
 import com.stage.coc.exception.UnauthorizedException;
 import com.stage.coc.repository.UserRepository;
 import com.stage.coc.security.JwtTokenProvider;
+import com.stage.coc.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService implements UserDetailsService {
+public class AuthService {
 
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
 
     public AuthResponse authenticateUser(LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getEmail(),
-                        loginRequest.getPassword()
-                )
-        );
+        System.out.println("🔐 AuthService: Tentative d'authentification pour: " + loginRequest.getEmail());
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = tokenProvider.generateToken(authentication);
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword()
+                    )
+            );
 
-        User user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new UnauthorizedException("Utilisateur non trouvé"));
+            System.out.println("✅ AuthService: Authentification réussie pour: " + loginRequest.getEmail());
 
-        return new AuthResponse(jwt, "Bearer", user.getId(), user.getEmail(),
-                user.getNom(), user.getTypeUser());
-    }
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = tokenProvider.generateToken(authentication);
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Si c'est un ID numérique, chercher par ID
-        if (username.matches("\\d+")) {
-            User user = userRepository.findById(Long.parseLong(username))
-                    .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec l'ID: " + username));
-            return user;
+            // ✅ Récupérer les informations utilisateur pour la réponse
+            User user = userRepository.findByEmail(loginRequest.getEmail())
+                    .orElseThrow(() -> new UnauthorizedException("Utilisateur non trouvé"));
+
+            System.out.println("✅ AuthService: Token JWT généré pour: " + user.getEmail());
+
+            return new AuthResponse(jwt, "Bearer", user.getId(), user.getEmail(),
+                    user.getNom(), user.getTypeUser());
+
+        } catch (Exception e) {
+            System.err.println("❌ AuthService: Erreur d'authentification pour " + loginRequest.getEmail() + ": " + e.getMessage());
+            throw e;
         }
-
-        // Sinon chercher par email
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec l'email: " + username));
-        return user;
     }
 }
