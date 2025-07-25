@@ -25,8 +25,7 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         initBureauxControle();
         initUtilisateursDemo();
-        // ✅ SUPPRIMER COMPLÈTEMENT : initDemandesDemo();
-        System.out.println("✅ Initialisation terminée - SANS demandes de démonstration");
+        System.out.println("✅ Initialisation terminée - Application prête pour production");
     }
 
     private void initBureauxControle() {
@@ -46,21 +45,19 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initUtilisateursDemo() {
-        // ✅ GARDER SEULEMENT LES UTILISATEURS DE TEST (sans leurs demandes)
-
-        // Importateur Demo
+        // Importateur Demo (pour les tests uniquement)
         if (!userRepository.existsByEmail("importateur@test.ma")) {
             User userImportateur = new User();
             userImportateur.setEmail("importateur@test.ma");
             userImportateur.setPassword(passwordEncoder.encode("password"));
-            userImportateur.setNom("Société Import Maroc");
+            userImportateur.setNom("Société Import Test");
             userImportateur.setTelephone("+212666123456");
             userImportateur.setTypeUser(TypeUser.IMPORTATEUR);
             userImportateur = userRepository.save(userImportateur);
 
             Importateur importateur = new Importateur();
             importateur.setUser(userImportateur);
-            importateur.setRaisonSociale("Société Import Maroc");
+            importateur.setRaisonSociale("Société Import Test");
             importateur.setAdresse("123 Rue du Commerce, Casablanca");
             importateur.setCodeDouane("CD123456");
             importateur.setIce("ICE123456789");
@@ -68,34 +65,34 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("✅ Importateur de test créé: importateur@test.ma / password");
         }
 
-        // Exportateur Demo
+        // Exportateur Demo (pour les tests uniquement)
         if (!userRepository.existsByEmail("exportateur@test.com")) {
-            User userExportateur1 = new User();
-            userExportateur1.setEmail("exportateur@test.com");
-            userExportateur1.setPassword(passwordEncoder.encode("password"));
-            userExportateur1.setNom("Exportateur France");
-            userExportateur1.setTelephone("+33123456789");
-            userExportateur1.setTypeUser(TypeUser.EXPORTATEUR);
-            userExportateur1 = userRepository.save(userExportateur1);
+            User userExportateur = new User();
+            userExportateur.setEmail("exportateur@test.com");
+            userExportateur.setPassword(passwordEncoder.encode("password"));
+            userExportateur.setNom("Exportateur Test");
+            userExportateur.setTelephone("+33123456789");
+            userExportateur.setTypeUser(TypeUser.EXPORTATEUR);
+            userExportateur = userRepository.save(userExportateur);
 
-            Exportateur exportateur1 = new Exportateur();
-            exportateur1.setUser(userExportateur1);
-            exportateur1.setRaisonSociale("Société Export France");
-            exportateur1.setTelephone("+33123456789");
-            exportateur1.setEmail("exportateur@test.com");
-            exportateur1.setAdresse("456 Avenue Export, Lyon");
-            exportateur1.setPays("France");
-            exportateur1.setIfu("FR123456789");
-            exportateurRepository.save(exportateur1);
+            Exportateur exportateur = new Exportateur();
+            exportateur.setUser(userExportateur);
+            exportateur.setRaisonSociale("Société Export Test");
+            exportateur.setTelephone("+33123456789");
+            exportateur.setEmail("exportateur@test.com");
+            exportateur.setAdresse("456 Avenue Export, Lyon");
+            exportateur.setPays("France");
+            exportateur.setIfu("FR123456789");
+            exportateurRepository.save(exportateur);
             System.out.println("✅ Exportateur de test créé: exportateur@test.com / password");
         }
 
-        // Agent Demo
+        // Agent Demo (pour les tests uniquement)
         if (!userRepository.existsByEmail("agent1@tuv.ma")) {
             User userAgent = new User();
             userAgent.setEmail("agent1@tuv.ma");
             userAgent.setPassword(passwordEncoder.encode("password"));
-            userAgent.setNom("Agent TUV");
+            userAgent.setNom("Agent Test");
             userAgent.setTelephone("+212666234567");
             userAgent.setTypeUser(TypeUser.AGENT);
             userAgent = userRepository.save(userAgent);
@@ -114,12 +111,12 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        // Superviseur Demo
+        // Superviseur Demo (pour les tests uniquement)
         if (!userRepository.existsByEmail("superviseur@tuv.ma")) {
             User userSuperviseur = new User();
             userSuperviseur.setEmail("superviseur@tuv.ma");
             userSuperviseur.setPassword(passwordEncoder.encode("password"));
-            userSuperviseur.setNom("Superviseur TUV");
+            userSuperviseur.setNom("Superviseur Test");
             userSuperviseur.setTelephone("+212666345678");
             userSuperviseur.setTypeUser(TypeUser.SUPERVISEUR);
             userSuperviseur = userRepository.save(userSuperviseur);
@@ -138,7 +135,4 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
     }
-
-    // ✅ MÉTHODE SUPPRIMÉE COMPLÈTEMENT
-    // private void initDemandesDemo() { ... }
 }

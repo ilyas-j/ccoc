@@ -30,6 +30,7 @@ public class DemandeService {
     private final MarchandiseRepository marchandiseRepository;
     private final UserRepository userRepository;
     private final AffectationService affectationService;
+    private final AvisMarchandiseRepository avisMarchandiseRepository;
 
     /**
      * Créer une nouvelle demande - Compatible Importateur ET Exportateur
@@ -39,6 +40,8 @@ public class DemandeService {
                 .getAuthentication().getPrincipal();
         User user = userRepository.findById(currentUser.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
+
+        System.out.println("🔍 Création demande par utilisateur: " + user.getEmail() + " (Type: " + user.getTypeUser() + ")");
 
         Importateur importateur;
         Exportateur exportateur;
@@ -63,6 +66,7 @@ public class DemandeService {
 
         // Sauvegarder la demande d'abord pour avoir un ID
         demande = demandeRepository.save(demande);
+        System.out.println("✅ Demande créée avec ID: " + demande.getId() + " et numéro: " + demande.getNumeroDemande());
 
         // Ajouter les marchandises
         for (MarchandiseRequest marchandiseReq : request.getMarchandises()) {
@@ -79,8 +83,19 @@ public class DemandeService {
             marchandiseRepository.save(marchandise);
         }
 
+        // Recharger la demande avec toutes les relations
+        demande = demandeRepository.findById(demande.getId()).orElse(demande);
+
         // Affecter automatiquement à un bureau de contrôle et un agent
         affectationService.affecterDemande(demande);
+
+        // Recharger une dernière fois après affectation
+        demande = demandeRepository.findById(demande.getId()).orElse(demande);
+
+        System.out.println("✅ Demande finalisée avec bureau: " +
+                (demande.getBureauControle() != null ? demande.getBureauControle().getNom() : "AUCUN") +
+                " et agent: " +
+                (demande.getAgent() != null && demande.getAgent().getUser() != null ? demande.getAgent().getUser().getNom() : "AUCUN"));
 
         return convertToResponse(demande);
     }
@@ -95,36 +110,32 @@ public class DemandeService {
         User user = userRepository.findById(currentUser.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
 
+        System.out.println("🔍 Récupération demandes pour utilisateur: " + user.getEmail() + " (Type: " + user.getTypeUser() + ")");
+
+        List<Demande> demandes;
+
         switch (user.getTypeUser()) {
             case IMPORTATEUR:
                 Importateur importateur = importateurRepository.findByUserId(currentUser.getId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Importateur non trouvé"));
-                List<Demande> demandesImportateur = demandeRepository.findByImportateurId(importateur.getId());
-                return demandesImportateur.stream().map(this::convertToResponse).collect(Collectors.toList());
+                        .orElseThrow(() -> new ResourceNotFoundException("Profil importateur non trouvé"));
+                demandes = demandeRepository.findByImportateurId(importateur.getId());
+                System.out.println("✅ " + demandes.size() + " demandes trouvées pour l'importateur ID: " + importateur.getId());
+                break;
 
             case EXPORTATEUR:
                 Exportateur exportateur = exportateurRepository.findByUserId(currentUser.getId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Exportateur non trouvé"));
-                List<Demande> demandesExportateur = demandeRepository.findByExportateurId(exportateur.getId());
-                return demandesExportateur.stream().map(this::convertToResponse).collect(Collectors.toList());
+                        .orElseThrow(() -> new ResourceNotFoundException("Profil exportateur non trouvé"));
+                demandes = demandeRepository.findByExportateurId(exportateur.getId());
+                System.out.println("✅ " + demandes.size() + " demandes trouvées pour l'exportateur ID: " + exportateur.getId());
+                break;
 
             default:
                 throw new RuntimeException("Type d'utilisateur non autorisé pour cette action");
         }
-    }
 
-    /**
-     * Récupérer les demandes de l'importateur connecté
-     */
-    public List<DemandeResponse> getMesDemandesImportateur() {
-        UserPrincipal currentUser = (UserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
-
-        Importateur importateur = importateurRepository.findByUserId(currentUser.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Importateur non trouvé"));
-
-        List<Demande> demandes = demandeRepository.findByImportateurId(importateur.getId());
-        return demandes.stream().map(this::convertToResponse).collect(Collectors.toList());
+        return demandes.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -139,11 +150,16 @@ public class DemandeService {
 
         Agent agent = user.getAgent();
         if (agent == null) {
-            throw new ResourceNotFoundException("Agent non trouvé");
+            System.out.println("⚠️ Aucun profil agent trouvé pour l'utilisateur: " + user.getEmail());
+            throw new ResourceNotFoundException("Profil agent non trouvé");
         }
 
         List<Demande> demandes = demandeRepository.findByAgentId(agent.getId());
-        return demandes.stream().map(this::convertToResponse).collect(Collectors.toList());
+        System.out.println("✅ " + demandes.size() + " demandes trouvées pour l'agent ID: " + agent.getId());
+
+        return demandes.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -164,9 +180,15 @@ public class DemandeService {
             throw new RuntimeException("Vous n'êtes pas autorisé à traiter cette demande");
         }
 
+        if (demande.getStatus() != StatusDemande.DEPOSE) {
+            throw new RuntimeException("Cette demande ne peut plus être prise en charge");
+        }
+
         demande.setStatus(StatusDemande.EN_COURS_DE_TRAITEMENT);
         demande.setDateTraitement(LocalDateTime.now());
         demande = demandeRepository.save(demande);
+
+        System.out.println("✅ Demande " + demande.getNumeroDemande() + " prise en charge par l'agent: " + agent.getUser().getNom());
 
         return convertToResponse(demande);
     }
@@ -188,6 +210,7 @@ public class DemandeService {
         return exportateurRepository
                 .findByRaisonSocialeAndPays(request.getExportateurNom(), request.getExportateurPays())
                 .orElseGet(() -> {
+                    System.out.println("📝 Création d'un nouvel exportateur: " + request.getExportateurNom());
                     Exportateur newExportateur = new Exportateur();
                     newExportateur.setRaisonSociale(request.getExportateurNom());
                     newExportateur.setTelephone(request.getExportateurTelephone());
@@ -195,7 +218,6 @@ public class DemandeService {
                     newExportateur.setAdresse(request.getExportateurAdresse());
                     newExportateur.setPays(request.getExportateurPays());
                     newExportateur.setIfu(request.getExportateurIfu());
-                    // Note: On ne crée pas d'utilisateur associé pour un exportateur "externe"
                     return exportateurRepository.save(newExportateur);
                 });
     }
@@ -204,12 +226,12 @@ public class DemandeService {
         return importateurRepository
                 .findByRaisonSocialeAndIce(request.getImportateurNom(), request.getImportateurIce())
                 .orElseGet(() -> {
+                    System.out.println("📝 Création d'un nouvel importateur: " + request.getImportateurNom());
                     Importateur newImportateur = new Importateur();
                     newImportateur.setRaisonSociale(request.getImportateurNom());
                     newImportateur.setAdresse(request.getImportateurAdresse());
                     newImportateur.setCodeDouane(request.getImportateurCodeDouane());
                     newImportateur.setIce(request.getImportateurIce());
-                    // Note: On ne crée pas d'utilisateur associé pour un importateur "externe"
                     return importateurRepository.save(newImportateur);
                 });
     }
@@ -227,6 +249,7 @@ public class DemandeService {
         response.setDateCloture(demande.getDateCloture());
         response.setDecisionGlobale(demande.getDecisionGlobale());
         response.setDelaiEstime(calculerDelaiEstime(demande));
+        response.setDateAffectation(demande.getDateCreation()); // Date d'affectation = date de création pour l'instant
 
         if (demande.getImportateur() != null) {
             response.setImportateurNom(demande.getImportateur().getRaisonSociale());
@@ -244,9 +267,7 @@ public class DemandeService {
             response.setAgentNom(demande.getAgent().getUser().getNom());
         }
 
-        response.setDateAffectation(demande.getDateCreation());
-
-        // Convertir les marchandises
+        // Convertir les marchandises avec leurs avis
         if (demande.getMarchandises() != null) {
             List<MarchandiseResponse> marchandises = demande.getMarchandises().stream()
                     .map(this::convertMarchandiseToResponse)
@@ -272,10 +293,12 @@ public class DemandeService {
         response.setAdresseFabricant(marchandise.getAdresseFabricant());
         response.setPaysOrigine(marchandise.getPaysOrigine());
 
-        if (marchandise.getAvisMarchandise() != null) {
-            response.setAvis(marchandise.getAvisMarchandise().getAvis().toString());
-            response.setCommentaire(marchandise.getAvisMarchandise().getCommentaire());
-        }
+        // Ajouter l'avis si disponible
+        avisMarchandiseRepository.findByMarchandiseId(marchandise.getId())
+                .ifPresent(avis -> {
+                    response.setAvis(avis.getAvis().toString());
+                    response.setCommentaire(avis.getCommentaire());
+                });
 
         return response;
     }
@@ -288,5 +311,4 @@ public class DemandeService {
         }
         return "2 jour(s)";
     }
-
 }
