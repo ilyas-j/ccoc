@@ -29,4 +29,9 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
 
     // ✅ AJOUTER CETTE MÉTHODE pour éviter les demandes dupliquées
     List<Demande> findByImportateurIdAndExportateurId(Long importateurId, Long exportateurId);
-}
+
+    @Query("SELECT d FROM Demande d WHERE d.agent.user.id = :userId")
+    List<Demande> findByAgentUserId(@Param("userId") Long userId);
+
+    @Query("SELECT d FROM Demande d WHERE d.agent.id = :agentId AND d.status = :status")
+    List<Demande> findByAgentIdAndStatus(@Param("agentId") Long agentId, @Param("status") StatusDemande status);}

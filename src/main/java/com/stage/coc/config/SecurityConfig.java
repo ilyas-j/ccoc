@@ -58,19 +58,22 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
 
-                        // Routes importateur
-                        .requestMatchers("/api/demandes", "/api/demandes/mes-demandes").hasRole("IMPORTATEUR")
+                        // Routes importateur/exportateur
+                        .requestMatchers("/api/demandes", "/api/demandes/mes-demandes").hasAnyRole("IMPORTATEUR", "EXPORTATEUR")
                         .requestMatchers("/api/importateurs/**").hasRole("IMPORTATEUR")
                         .requestMatchers("/api/exportateur/**").hasRole("EXPORTATEUR")
-                        // Routes agent (includes superviseur)
+
+                        // Routes AGENT seulement (pas superviseur)
                         .requestMatchers("/api/agent/**").hasRole("AGENT")
                         .requestMatchers("/api/demandes/agent").hasRole("AGENT")
                         .requestMatchers("/api/demandes/*/prendre-en-charge").hasRole("AGENT")
 
-                        // Routes superviseur (les superviseurs sont aussi des agents)
-                        .requestMatchers("/api/superviseur/**").hasRole("AGENT")
+                        // Routes SUPERVISEUR seulement
+                        .requestMatchers("/api/superviseur/**").hasRole("SUPERVISEUR")
 
-                        // Toute autre route nécessite une authentification
+                        // Routes pour AGENT ET SUPERVISEUR (superviseur peut aussi traiter)
+                        .requestMatchers("/api/demandes-traitement/**").hasAnyRole("AGENT", "SUPERVISEUR")
+
                         .anyRequest().authenticated()
                 );
 

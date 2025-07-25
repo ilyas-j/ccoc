@@ -10,7 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
-@DependsOn({"userRepository", "importateurRepository", "exportateurRepository"})
+@DependsOn({"userRepository", "importateurRepository", "exportateurRepository", "superviseurRepository"})
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
@@ -20,6 +20,7 @@ public class DataInitializer implements CommandLineRunner {
     private final BureauControleRepository bureauControleRepository;
     private final AgentRepository agentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final SuperviseurRepository superviseurRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -118,19 +119,21 @@ public class DataInitializer implements CommandLineRunner {
             userSuperviseur.setPassword(passwordEncoder.encode("password"));
             userSuperviseur.setNom("Superviseur Test");
             userSuperviseur.setTelephone("+212666345678");
-            userSuperviseur.setTypeUser(TypeUser.SUPERVISEUR);
+            userSuperviseur.setTypeUser(TypeUser.SUPERVISEUR); // ✅ TYPE SUPERVISEUR
             userSuperviseur = userRepository.save(userSuperviseur);
 
             BureauControle tuv = bureauControleRepository.findByNom("TUV").orElse(null);
             if (tuv != null) {
-                Agent superviseur = new Agent();
+                Superviseur superviseur = new Superviseur();
                 superviseur.setUser(userSuperviseur);
                 superviseur.setBureauControle(tuv);
-                superviseur.setDisponible(true);
-                superviseur.setEnConge(false);
-                superviseur.setChargeTravail(0);
-                superviseur.setSuperviseur(true);
-                agentRepository.save(superviseur);
+                superviseur.setPeutReaffecter(true);
+                superviseur.setPeutGererAgents(true);
+                superviseur.setPeutVoirToutesLesDemandes(true);
+                superviseur.setPeutTraiterDemandes(true);
+                superviseur.setDisponiblePourTraitement(true);
+                superviseur.setChargeTravailPersonnelle(0);
+                superviseurRepository.save(superviseur);
                 System.out.println("✅ Superviseur de test créé: superviseur@tuv.ma / password");
             }
         }
