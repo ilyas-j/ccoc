@@ -12,5 +12,5 @@ public class AuthResponse {
     private Long id;
     private String email;
     private String nom;
-    private TypeUser typeUser;
+    private TypeUser typeUser; // IMPORTATEUR, EXPORTATEUR, AGENT ou SUPERVISEUR
 }

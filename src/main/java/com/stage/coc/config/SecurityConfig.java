@@ -70,9 +70,16 @@ public class SecurityConfig {
 
                         // Routes SUPERVISEUR seulement
                         .requestMatchers("/api/superviseur/**").hasRole("SUPERVISEUR")
+                        .requestMatchers("/api/superviseur/vue-ensemble").hasRole("SUPERVISEUR")
+                        .requestMatchers("/api/superviseur/agents").hasRole("SUPERVISEUR")
+                        .requestMatchers("/api/superviseur/demandes/*/reaffecter/*").hasRole("SUPERVISEUR")
+                        .requestMatchers("/api/superviseur/agents/*/disponibilite").hasRole("SUPERVISEUR")
+                        .requestMatchers("/api/superviseur/statistiques").hasRole("SUPERVISEUR")
+                        .requestMatchers("/api/superviseur/dashboard").hasRole("SUPERVISEUR")
 
                         // Routes pour AGENT ET SUPERVISEUR (superviseur peut aussi traiter)
                         .requestMatchers("/api/demandes-traitement/**").hasAnyRole("AGENT", "SUPERVISEUR")
+                        .requestMatchers("/api/superviseur/traitement/**").hasRole("SUPERVISEUR")
 
                         .anyRequest().authenticated()
                 );
