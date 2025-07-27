@@ -290,4 +290,16 @@ public class AgentService {
 
         return response;
     }
+    // Ajouter cette méthode manquante
+    public DemandeResponse getDemandeDetails(Long demandeId, Long agentId) {
+        Demande demande = demandeRepository.findById(demandeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Demande non trouvée"));
+
+        // Vérifier que l'agent a le droit d'accéder à cette demande
+        if (!demande.getAgent().getId().equals(agentId)) {
+            throw new UnauthorizedException("Accès non autorisé");
+        }
+
+        return convertToResponse(demande);
+    }
 }
