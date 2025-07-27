@@ -130,9 +130,6 @@ public class DataInitializer implements CommandLineRunner {
                 superviseur.setPeutReaffecter(true);
                 superviseur.setPeutGererAgents(true);
                 superviseur.setPeutVoirToutesLesDemandes(true);
-                superviseur.setPeutTraiterDemandes(true);
-                superviseur.setDisponiblePourTraitement(true);
-                superviseur.setChargeTravailPersonnelle(0);
                 superviseurRepository.save(superviseur);
                 System.out.println("✅ Superviseur de test créé: superviseur@tuv.ma / password");
             }

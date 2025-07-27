@@ -28,8 +28,4 @@ public class Superviseur {
     private boolean peutGererAgents = true;
     private boolean peutVoirToutesLesDemandes = true;
 
-    // Peut aussi traiter des demandes comme un agent
-    private boolean peutTraiterDemandes = true;
-    private int chargeTravailPersonnelle = 0;
-    private boolean disponiblePourTraitement = true;
 }

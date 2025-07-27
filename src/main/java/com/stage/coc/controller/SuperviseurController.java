@@ -79,15 +79,7 @@ public class SuperviseurController {
         return ResponseEntity.ok(stats);
     }
 
-    /**
-     * Traitement personnel - Le superviseur peut aussi traiter des demandes
-     */
-    @GetMapping("/mes-demandes-personnelles")
-    @PreAuthorize("hasRole('SUPERVISEUR')")
-    public ResponseEntity<List<DemandeResponse>> getMesDemandesPersonnelles() {
-        List<DemandeResponse> demandes = superviseurService.getMesDemandesPersonnelles();
-        return ResponseEntity.ok(demandes);
-    }
+
 
     /**
      * Tableau de bord avec KPIs

@@ -223,27 +223,7 @@ public class SuperviseurService {
         return stats;
     }
 
-    /**
-     * 🎯 FONCTION SUPERVISEUR: Traiter personnellement des demandes (double rôle)
-     */
-    public List<DemandeResponse> getMesDemandesPersonnelles() {
-        Superviseur superviseur = getSuperviseurConnecte();
 
-        System.out.println("👤 Superviseur récupère ses demandes personnelles (double rôle)");
-
-        if (!superviseur.isPeutTraiterDemandes()) {
-            throw new UnauthorizedException("Traitement personnel non autorisé pour ce superviseur");
-        }
-
-        // Récupérer les demandes affectées directement au superviseur (par son user ID)
-        List<Demande> demandes = demandeRepository.findByAgentUserId(superviseur.getUser().getId());
-
-        System.out.println("✅ " + demandes.size() + " demandes personnelles trouvées");
-
-        return demandes.stream()
-                .map(this::convertToDemandeResponse)
-                .collect(Collectors.toList());
-    }
 
     /**
      * 🔄 FONCTION CRITIQUE: Réassigner automatiquement les demandes d'un agent en congé
