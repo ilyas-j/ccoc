@@ -21,11 +21,16 @@ public class RegistrationService {
     private final BureauControleRepository bureauControleRepository;
     private final PasswordEncoder passwordEncoder;
     private final ExportateurRepository exportateurRepository;
+    private final SuperviseurRepository superviseurRepository;
+
 
     public User registerUser(RegisterRequest request) {
+        // ✅ VALIDATIONS RENFORCÉES
+        validateRegistrationRequest(request);
+
         // Vérifier si l'email existe déjà
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new ValidationException("Cet email est déjà utilisé");
+            throw new ValidationException("Cette adresse email est déjà utilisée");
         }
 
         // Créer l'utilisateur
@@ -37,19 +42,63 @@ public class RegistrationService {
         user.setTypeUser(request.getTypeUser());
         user = userRepository.save(user);
 
-        // Créer les entités spécifiques selon le type d'utilisateur
+        // Créer le profil spécifique
         switch (request.getTypeUser()) {
             case IMPORTATEUR:
                 createImportateur(user, request);
                 break;
             case EXPORTATEUR:
-                createExportateur(user, request); // AJOUTER
+                createExportateur(user, request);
                 break;
             case AGENT:
                 createAgent(user, request);
                 break;
+            case SUPERVISEUR:
+                createSuperviseur(user, request);
+                break;
         }
+
         return user;
+    }
+
+    private void validateRegistrationRequest(RegisterRequest request) {
+        // Validation mot de passe fort
+        if (request.getPassword().length() < 8) {
+            throw new ValidationException("Le mot de passe doit contenir au moins 8 caractères");
+        }
+
+        // Validation selon le type d'utilisateur
+        switch (request.getTypeUser()) {
+            case IMPORTATEUR:
+                if (request.getRaisonSociale() == null || request.getRaisonSociale().trim().isEmpty()) {
+                    throw new ValidationException("La raison sociale est obligatoire pour un importateur");
+                }
+                break;
+            case EXPORTATEUR:
+                if (request.getRaisonSociale() == null || request.getPays() == null) {
+                    throw new ValidationException("La raison sociale et le pays sont obligatoires pour un exportateur");
+                }
+                break;
+            case AGENT:
+            case SUPERVISEUR:
+                if (request.getBureauControleId() == null) {
+                    throw new ValidationException("Le bureau de contrôle est obligatoire pour un agent/superviseur");
+                }
+                break;
+        }
+    }
+
+    private void createSuperviseur(User user, RegisterRequest request) {
+        BureauControle bureau = bureauControleRepository.findById(request.getBureauControleId())
+                .orElseThrow(() -> new ValidationException("Bureau de contrôle non trouvé"));
+
+        Superviseur superviseur = new Superviseur();
+        superviseur.setUser(user);
+        superviseur.setBureauControle(bureau);
+        superviseur.setPeutReaffecter(true);
+        superviseur.setPeutGererAgents(true);
+        superviseur.setPeutVoirToutesLesDemandes(true);
+        superviseurRepository.save(superviseur);
     }
 
     private void createExportateur(User user, RegisterRequest request) {

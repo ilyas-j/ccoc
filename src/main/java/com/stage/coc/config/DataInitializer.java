@@ -25,9 +25,48 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         initBureauxControle();
-        initUtilisateursDemo();
-        System.out.println("✅ Initialisation terminée - Application prête pour production");
+        createSystemAdmin();
+
+        System.out.println("✅ Initialisation production terminée");
+        System.out.println("🔐 Admin système: admin@portnet.ma / AdminCOC2024!");
+        System.out.println("📝 Les utilisateurs peuvent maintenant s'inscrire via /register");    }
+
+    private void createSystemAdmin() {
+        if (!userRepository.existsByEmail("admin@portnet.ma")) {
+            System.out.println("📋 Création de l'administrateur système...");
+
+            // Créer l'utilisateur administrateur
+            User adminUser = new User();
+            adminUser.setEmail("admin@portnet.ma");
+            adminUser.setPassword(passwordEncoder.encode("AdminCOC2024!"));
+            adminUser.setNom("Administrateur Système COC");
+            adminUser.setTelephone("+212666000000");
+            adminUser.setTypeUser(TypeUser.SUPERVISEUR);
+            adminUser = userRepository.save(adminUser);
+
+            // Affecter au bureau TUV par défaut
+            BureauControle tuv = bureauControleRepository.findByNom("TUV").orElse(null);
+            if (tuv != null) {
+                Superviseur superviseur = new Superviseur();
+                superviseur.setUser(adminUser);
+                superviseur.setBureauControle(tuv);
+                superviseur.setPeutReaffecter(true);
+                superviseur.setPeutGererAgents(true);
+                superviseur.setPeutVoirToutesLesDemandes(true);
+                superviseurRepository.save(superviseur);
+
+                System.out.println("✅ Administrateur système créé avec succès");
+                System.out.println("   Email: admin@portnet.ma");
+                System.out.println("   Mot de passe: AdminCOC2024!");
+                System.out.println("   Bureau: " + tuv.getNom());
+            } else {
+                System.err.println("❌ Erreur: Bureau TUV non trouvé pour l'admin");
+            }
+        } else {
+            System.out.println("ℹ️ Administrateur système déjà existant");
+        }
     }
+
 
     private void initBureauxControle() {
         String[] bureauxNoms = {"TUV", "ECF", "AFNOR", "ICUM", "SGS"};
@@ -41,97 +80,6 @@ public class DataInitializer implements CommandLineRunner {
                 bureau.setEmail("contact@" + nom.toLowerCase() + ".ma");
                 bureauControleRepository.save(bureau);
                 System.out.println("✅ Bureau de contrôle créé: " + nom);
-            }
-        }
-    }
-
-    private void initUtilisateursDemo() {
-        // Importateur Demo (pour les tests uniquement)
-        if (!userRepository.existsByEmail("importateur@test.ma")) {
-            User userImportateur = new User();
-            userImportateur.setEmail("importateur@test.ma");
-            userImportateur.setPassword(passwordEncoder.encode("password"));
-            userImportateur.setNom("Société Import Test");
-            userImportateur.setTelephone("+212666123456");
-            userImportateur.setTypeUser(TypeUser.IMPORTATEUR);
-            userImportateur = userRepository.save(userImportateur);
-
-            Importateur importateur = new Importateur();
-            importateur.setUser(userImportateur);
-            importateur.setRaisonSociale("Société Import Test");
-            importateur.setAdresse("123 Rue du Commerce, Casablanca");
-            importateur.setCodeDouane("CD123456");
-            importateur.setIce("ICE123456789");
-            importateurRepository.save(importateur);
-            System.out.println("✅ Importateur de test créé: importateur@test.ma / password");
-        }
-
-        // Exportateur Demo (pour les tests uniquement)
-        if (!userRepository.existsByEmail("exportateur@test.com")) {
-            User userExportateur = new User();
-            userExportateur.setEmail("exportateur@test.com");
-            userExportateur.setPassword(passwordEncoder.encode("password"));
-            userExportateur.setNom("Exportateur Test");
-            userExportateur.setTelephone("+33123456789");
-            userExportateur.setTypeUser(TypeUser.EXPORTATEUR);
-            userExportateur = userRepository.save(userExportateur);
-
-            Exportateur exportateur = new Exportateur();
-            exportateur.setUser(userExportateur);
-            exportateur.setRaisonSociale("Société Export Test");
-            exportateur.setTelephone("+33123456789");
-            exportateur.setEmail("exportateur@test.com");
-            exportateur.setAdresse("456 Avenue Export, Lyon");
-            exportateur.setPays("France");
-            exportateur.setIfu("FR123456789");
-            exportateurRepository.save(exportateur);
-            System.out.println("✅ Exportateur de test créé: exportateur@test.com / password");
-        }
-
-        // Agent Demo (pour les tests uniquement)
-        if (!userRepository.existsByEmail("agent1@tuv.ma")) {
-            User userAgent = new User();
-            userAgent.setEmail("agent1@tuv.ma");
-            userAgent.setPassword(passwordEncoder.encode("password"));
-            userAgent.setNom("Agent Test");
-            userAgent.setTelephone("+212666234567");
-            userAgent.setTypeUser(TypeUser.AGENT);
-            userAgent = userRepository.save(userAgent);
-
-            BureauControle tuv = bureauControleRepository.findByNom("TUV").orElse(null);
-            if (tuv != null) {
-                Agent agent = new Agent();
-                agent.setUser(userAgent);
-                agent.setBureauControle(tuv);
-                agent.setDisponible(true);
-                agent.setEnConge(false);
-                agent.setChargeTravail(0);
-                agent.setSuperviseur(false);
-                agentRepository.save(agent);
-                System.out.println("✅ Agent de test créé: agent1@tuv.ma / password");
-            }
-        }
-
-        // Superviseur Demo (pour les tests uniquement)
-        if (!userRepository.existsByEmail("superviseur@tuv.ma")) {
-            User userSuperviseur = new User();
-            userSuperviseur.setEmail("superviseur@tuv.ma");
-            userSuperviseur.setPassword(passwordEncoder.encode("password"));
-            userSuperviseur.setNom("Superviseur Test");
-            userSuperviseur.setTelephone("+212666345678");
-            userSuperviseur.setTypeUser(TypeUser.SUPERVISEUR); // ✅ TYPE SUPERVISEUR
-            userSuperviseur = userRepository.save(userSuperviseur);
-
-            BureauControle tuv = bureauControleRepository.findByNom("TUV").orElse(null);
-            if (tuv != null) {
-                Superviseur superviseur = new Superviseur();
-                superviseur.setUser(userSuperviseur);
-                superviseur.setBureauControle(tuv);
-                superviseur.setPeutReaffecter(true);
-                superviseur.setPeutGererAgents(true);
-                superviseur.setPeutVoirToutesLesDemandes(true);
-                superviseurRepository.save(superviseur);
-                System.out.println("✅ Superviseur de test créé: superviseur@tuv.ma / password");
             }
         }
     }
