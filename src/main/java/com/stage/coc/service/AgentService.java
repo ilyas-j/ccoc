@@ -291,13 +291,15 @@ public class AgentService {
         return response;
     }
     // Ajouter cette méthode manquante
-    public DemandeResponse getDemandeDetails(Long demandeId, Long agentId) {
+    public DemandeResponse getDemandeDetails(Long demandeId) {
+        Agent agent = getAgentConnecte();
+
         Demande demande = demandeRepository.findById(demandeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Demande non trouvée"));
 
-        // Vérifier que l'agent a le droit d'accéder à cette demande
-        if (!demande.getAgent().getId().equals(agentId)) {
-            throw new UnauthorizedException("Accès non autorisé");
+        // Vérifier que la demande est affectée à cet agent
+        if (!demande.getAgent().getId().equals(agent.getId())) {
+            throw new UnauthorizedException("Cette demande n'est pas affectée à cet agent");
         }
 
         return convertToResponse(demande);

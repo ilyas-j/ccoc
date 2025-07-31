@@ -41,6 +41,12 @@ public class AgentController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/demandes/{demandeId}/details")
+    @PreAuthorize("hasRole('AGENT')")
+    public ResponseEntity<DemandeResponse> getDemandeDetails(@PathVariable Long demandeId) {
+        DemandeResponse response = agentService.getDemandeDetails(demandeId);
+        return ResponseEntity.ok(response);
+    }
     /**
      * Donner un avis sur une marchandise
      */
